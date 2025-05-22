@@ -8,6 +8,11 @@ type Service =
     | GitHub
     | Codeberg
 
+let getEnvironmentVariableOrDefault variable defaultValue =
+    match Environment.GetEnvironmentVariable(variable) with
+    | null -> defaultValue
+    | value -> value
+
 let createURL username limit service =
     match service with
     | GitHub -> $"https://api.github.com/users/{username}/repos?per_page={limit}"
@@ -48,8 +53,10 @@ let getListChanges left right username limit =
     repositories
     |> Set.filter (fun repository -> not (Set.contains repository result))
 
-let args = Environment.GetCommandLineArgs()
-let limit = 100
+let username =
+    getEnvironmentVariableOrDefault "MY_REPOSITORIES_USERNAME" "deadblackclover"
 
-for item in getListChanges GitHub Codeberg args[2] limit do
+let limit = getEnvironmentVariableOrDefault "MY_REPOSITORIES_LIMIT" "100"
+
+for item in getListChanges GitHub Codeberg username limit do
     printfn "%s" item
